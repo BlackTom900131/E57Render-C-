@@ -21,54 +21,32 @@
 #include <E57Format/E57SimpleData.h>
 #include <E57Format/E57SimpleWriter.h>
 #include <Windows.h>
+#include "newtask.h"
+#include "CProcPoints.h"
 
-
-// For simplicity, error handling is minimal
-
-// Define point structure
-struct Point
-{
-    double x, y, z;
-    int label; // segmentation label
-};
+std::vector<Point> points;
 
 // Class definitions
 const std::vector<std::string> classNames = {
-    "Floor", "Ceiling", "Walls", "Furniture", "Beams", "Columns" };
+    "Floor", "Ceiling", "Walls", "Furniture", "Beams", "Columns"
+};
 const int classCount = 6;
 
 // Color map for classes
 const float classColors[classCount][3] = {
-    {0.58f, 0.29f, 0.0f}, // Floor - Brownish
-    {1.0f, 1.0f, 0.0f},   // Ceiling - Yellow
-    {1.0f, 0.0f, 0.0f},   // Walls - Red
-    {0.0f, 1.0f, 0.0f},   // Furniture - Green
-    {0.0f, 0.0f, 1.0f},   // Beams - Blue
-    {1.0f, 0.65f, 0.0f}   // Columns - Orange
+    {0.58f, 0.29f, 0.0f},     // Floor - Brownish
+    {1.0f, 1.0f, 0.0f},       // Ceiling - Yellow
+    {1.0f, 0.0f, 0.0f},       // Walls - Red
+    {0.0f, 1.0f, 0.0f},       // Furniture - Green
+    {0.0f, 0.0f, 1.0f},       // Beams - Blue
+    {1.0f, 0.65f, 0.0f}       // Columns - Orange
 };
 
 // Visibility toggles
 bool showClass[classCount] = { true, true, true, true, true, true };
 
 // Point cloud data
-std::vector<Point> points;
-
-
-// Function to load E57 file
-// bool loadE57(const std::string& filename, std::vector<Point>& points) {
-//    try {
-//        //MessageBoxA(NULL, filename.c_str(), "Error", MB_OK | MB_ICONERROR);
-//        // Create ReaderOptions object if needed
-//        e57::ReaderOptions options;
-//        e57::Reader reader(filename, options);
-//        return true;
-//    }
-//    catch (const std::exception& e) {
-//        std::cerr << "Error reading E57: " << e.what() << std::endl;
-//        //MessageBoxA(NULL, e.what(), "Error", MB_OK | MB_ICONERROR);
-//        return false;
-//    }
-//}
+//std::vector<Point> points;
 
 bool loadE571(const std::string& filename, std::vector<Point>& points)
 {
@@ -426,7 +404,6 @@ GLFWwindow* initGL()
     return window;
 }
 
-
 // Setup ImGui
 void setupImGui(GLFWwindow* window)
 {
@@ -477,27 +454,51 @@ void setupCamera(int windowWidth, int windowHeight)
 }
 
 // Render point cloud
+//void renderPointCloud()
+//{
+//    glPointSize(2.0f);
+//    glBegin(GL_POINTS);
+//    for (const auto& p : points)
+//    {
+//        // Optional: Color by label/class
+//        if (p.label == 0)
+//            glColor3f(0.0f, 1.0f, 1.0f);  // Red
+//        else if (p.label == 1)
+//            glColor3f(1.0f, 0.0f, 1.0f);  // Green
+//        else
+//            glColor3f(1.0f, 1.0f, 0.0f);  // Blue
+//
+//        glVertex3f((float)p.x, (float)p.y, (float)p.z);
+//    }
+//    glEnd();
+//}
+
 void renderPointCloud()
 {
     glPointSize(2.0f);
     glBegin(GL_POINTS);
     for (const auto& p : points)
     {
-        // Optional: Color by label/class
-        if (p.label == 0)
-            glColor3f(0.0f, 1.0f, 1.0f);  // Red
-        else if (p.label == 1)
-            glColor3f(1.0f, 0.0f, 1.0f);  // Green
+        // Example coloring based on label
+        if (p.label == -1)
+            glColor3f(0.8f, 0.8f, 0.8f); // gray
         else
-            glColor3f(1.0f, 1.0f, 0.0f);  // Blue
-
-        glVertex3f((float)p.x, (float)p.y, (float)p.z);
+        {
+            // Assign some color scheme based on label
+            switch (p.label)
+            {
+            case 0: glColor3f(1, 0, 0); break; // red
+            case 1: glColor3f(0, 1, 0); break; // green
+            case 2: glColor3f(0, 0, 1); break; // blue
+            default: glColor3f(1, 1, 1); break; // white
+            }
+        }
+        glVertex3f(p.x, p.y, p.z);
     }
     glEnd();
 }
 
-void drawLine(float x1, float y1, float z1,
-    float x2, float y2, float z2)
+void drawLine(float x1, float y1, float z1, float x2, float y2, float z2)
 {
     glLineWidth(2.0f);
     glColor3f(1.0f, 1.0f, 1.0f); // White
@@ -535,10 +536,25 @@ std::string GetFirstArgument()
     return argument;
 }
 
+void transferColoredCloudToPoints(const pcl::PointCloud<PointRGB>::Ptr& coloredCloud, std::vector<Point>& points)
+{
+    for (const auto& cpt : coloredCloud->points)
+    {
+        Point p;
+        p.x = cpt.x;
+        p.y = cpt.y;
+        p.z = cpt.z;
+        // Assign label or class index if relevant; here, set to -1 or 0
+        p.label = -1; // or set based on your logic
+        points.push_back(p);
+    }
+}
+
 // WinMain function (Win32 entry point)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
     std::string filename = "C_001.e57";
+    CProcPoints procPoint;
     // std::string filename = GetFirstArgument();
     // if (filename.empty()) {
     //     //MessageBoxA(NULL, "Usage: program.exe <e57_filename>", "Error", MB_OK | MB_ICONERROR);
@@ -563,6 +579,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     std::cout << "Segmenting points...\n";
     segmentPoints(points);
     std::cout << "Segmentation complete.\n";
+
+    //ProcPoints
+    procPoint.convertPoints();
+    procPoint.convertPointCloud();
+    procPoint.segmentPlanes();
+
+    // Transfer colored cloud points to your points vector
+    transferColoredCloudToPoints(procPoint.getColoredCloud(), points);
+
 
     // Initialize GLFW (required for window creation)
     if (!glfwInit())

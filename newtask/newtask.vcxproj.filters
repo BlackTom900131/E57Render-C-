@@ -39,6 +39,9 @@
     <ClInclude Include="F:\pth\newtask\external\imgui\backends\imgui_impl_opengl3_loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CProcPoints.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="newtask.cpp">
@@ -69,6 +72,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="F:\pth\newtask\imgui\backends\imgui_impl_glfw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CProcPoints.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
