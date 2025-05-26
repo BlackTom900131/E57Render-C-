@@ -1,0 +1,15 @@
+*.exe
+*.obj
+*.pdb
+*.log
+*.tmp
+*.cache
+*.bak
+*.db
+*.user
+.vs/
+x64/
+*.e57
+*.tlog/
+*.tlog
+*.xml
