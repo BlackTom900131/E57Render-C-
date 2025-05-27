@@ -17,8 +17,6 @@ public:
 	pcl::PointCloud<pcl::PointXYZ>::Ptr m_cloud;
 	pcl::PointCloud<PointRGB>::Ptr m_colored_cloud;
 	pcl::PointCloud<PointT>::Ptr m_cloud_remaining;
-	pcl::PointCloud<PointRGB>::Ptr getColoredCloud() { return m_colored_cloud; }
-	
 
 	CProcPoints();
 	~CProcPoints();

@@ -10,3 +10,4 @@ struct Point {
 
 // Point cloud data
 extern std::vector<Point> points;
+extern std::vector<Point> pointsc;

@@ -53,7 +53,7 @@ void CProcPoints::segmentPlanes()
         seg.setOptimizeCoefficients(true);
         seg.setModelType(pcl::SACMODEL_PLANE);
         seg.setMethodType(pcl::SAC_RANSAC);
-        seg.setDistanceThreshold(0.01);
+        seg.setDistanceThreshold(0.2);
         seg.setInputCloud(m_cloud_remaining);
         seg.segment(*inliers, *coefficients);
 
@@ -77,7 +77,14 @@ void CProcPoints::segmentPlanes()
             cpt.r = r;
             cpt.g = g;
             cpt.b = b;
+            Point cp;
+            cp.x = pt.x;
+            cp.y = pt.y;
+            cp.z = pt.z;
+            cp.label = plane_id + 1;
+
             m_colored_cloud->points.push_back(cpt);
+            pointsc.push_back(cp);
         }
 
         // Remove plane points from remaining cloud
@@ -87,6 +94,8 @@ void CProcPoints::segmentPlanes()
         m_cloud_remaining = cloud_filtered;
 
         plane_id++;
+        if (plane_id == 6)
+            break;
     }
 
     // Add remaining (non-plane) points without color (white or gray)
@@ -98,6 +107,12 @@ void CProcPoints::segmentPlanes()
         cpt.r = 200;
         cpt.g = 200;
         cpt.b = 200;
+        Point cp;
+        cp.x = pt.x;
+        cp.y = pt.y;
+        cp.z = pt.z;
+        cp.label =  0;
         m_colored_cloud->points.push_back(cpt);
+        pointsc.push_back(cp);
     }
 }

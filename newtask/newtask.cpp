@@ -25,7 +25,7 @@
 #include "CProcPoints.h"
 
 std::vector<Point> points;
-
+std::vector<Point> pointsc;
 // Class definitions
 const std::vector<std::string> classNames = {
     "Floor", "Ceiling", "Walls", "Furniture", "Beams", "Columns"
@@ -358,7 +358,7 @@ void segmentPoints(std::vector<Point>& pts)
     // For demo, assign random classes
     for (auto& p : pts)
     {
-        p.label = rand() % classCount;
+        p.label = 0;
     }
 }
 
@@ -443,7 +443,7 @@ void setupCamera(int windowWidth, int windowHeight)
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    myPerspective(45.0, aspect, 0.1, 1000.0);
+    myPerspective(30.0, aspect, 0.1, 1000.0);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -454,51 +454,35 @@ void setupCamera(int windowWidth, int windowHeight)
 }
 
 // Render point cloud
-//void renderPointCloud()
-//{
-//    glPointSize(2.0f);
-//    glBegin(GL_POINTS);
-//    for (const auto& p : points)
-//    {
-//        // Optional: Color by label/class
-//        if (p.label == 0)
-//            glColor3f(0.0f, 1.0f, 1.0f);  // Red
-//        else if (p.label == 1)
-//            glColor3f(1.0f, 0.0f, 1.0f);  // Green
-//        else
-//            glColor3f(1.0f, 1.0f, 0.0f);  // Blue
-//
-//        glVertex3f((float)p.x, (float)p.y, (float)p.z);
-//    }
-//    glEnd();
-//}
-
 void renderPointCloud()
 {
     glPointSize(2.0f);
     glBegin(GL_POINTS);
-    for (const auto& p : points)
+    for (const auto& p : pointsc)
     {
-        // Example coloring based on label
-        if (p.label == -1)
-            glColor3f(0.8f, 0.8f, 0.8f); // gray
-        else
-        {
-            // Assign some color scheme based on label
-            switch (p.label)
-            {
-            case 0: glColor3f(1, 0, 0); break; // red
-            case 1: glColor3f(0, 1, 0); break; // green
-            case 2: glColor3f(0, 0, 1); break; // blue
-            default: glColor3f(1, 1, 1); break; // white
-            }
-        }
-        glVertex3f(p.x, p.y, p.z);
+        // Optional: Color by label/class
+        if (p.label == 0)
+            glColor3f(1.0f, 0.0f, 0.0f);  // Red
+        else if (p.label == 1)
+            glColor3f(0.0f, 1.0f, 0.0f);  // Green
+        else if (p.label == 2)
+            glColor3f(0.0f, 0.0f, 1.0f);  // Blue
+        else if (p.label == 3)
+            glColor3f(0.0f, 0.5f, 0.5f);  // Blue
+        else if (p.label == 4)
+            glColor3f(0.0f, 0.5f, 1.0f);  // Blue
+        else if (p.label == 5)
+            glColor3f(0.0f, 1.0f, 0.5f);  // Blue
+        else if (p.label == 6)
+            glColor3f(0.0f, 1.0f, 1.0f);  // Blue
+
+        glVertex3f((float)p.x, (float)p.y, (float)p.z);
     }
     glEnd();
 }
 
-void drawLine(float x1, float y1, float z1, float x2, float y2, float z2)
+void drawLine(float x1, float y1, float z1,
+    float x2, float y2, float z2)
 {
     glLineWidth(2.0f);
     glColor3f(1.0f, 1.0f, 1.0f); // White
@@ -536,20 +520,6 @@ std::string GetFirstArgument()
     return argument;
 }
 
-void transferColoredCloudToPoints(const pcl::PointCloud<PointRGB>::Ptr& coloredCloud, std::vector<Point>& points)
-{
-    for (const auto& cpt : coloredCloud->points)
-    {
-        Point p;
-        p.x = cpt.x;
-        p.y = cpt.y;
-        p.z = cpt.z;
-        // Assign label or class index if relevant; here, set to -1 or 0
-        p.label = -1; // or set based on your logic
-        points.push_back(p);
-    }
-}
-
 // WinMain function (Win32 entry point)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -584,10 +554,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     procPoint.convertPoints();
     procPoint.convertPointCloud();
     procPoint.segmentPlanes();
-
-    // Transfer colored cloud points to your points vector
-    transferColoredCloudToPoints(procPoint.getColoredCloud(), points);
-
 
     // Initialize GLFW (required for window creation)
     if (!glfwInit())
