@@ -23,9 +23,12 @@
 #include <Windows.h>
 #include "newtask.h"
 #include "CProcPoints.h"
+#include "CSortPointCloud.h"
+#include "CDetector.h"
 
 std::vector<Point> points;
 std::vector<Point> pointsc;
+
 // Class definitions
 const std::vector<std::string> classNames = {
     "Floor", "Ceiling", "Walls", "Furniture", "Beams", "Columns"
@@ -34,12 +37,12 @@ const int classCount = 6;
 
 // Color map for classes
 const float classColors[classCount][3] = {
-    {0.58f, 0.29f, 0.0f},     // Floor - Brownish
-    {1.0f, 1.0f, 0.0f},       // Ceiling - Yellow
-    {1.0f, 0.0f, 0.0f},       // Walls - Red
-    {0.0f, 1.0f, 0.0f},       // Furniture - Green
-    {0.0f, 0.0f, 1.0f},       // Beams - Blue
-    {1.0f, 0.65f, 0.0f}       // Columns - Orange
+    {0.58f, 0.29f, 0.0f},     // Floor    -     Brownish
+    {1.0f, 1.0f, 0.0f},       // Ceiling  -     Yellow
+    {1.0f, 0.0f, 0.0f},       // Walls    -     Red
+    {0.0f, 1.0f, 0.0f},       // Furniture-     Green
+    {0.0f, 0.0f, 1.0f},       // Beams    -     Blue
+    {1.0f, 0.65f, 0.0f}       // Columns  -     Orange
 };
 
 // Visibility toggles
@@ -341,14 +344,12 @@ bool loadE57(const std::string& filename, std::vector<Point>& points)
             p.x = x;
             p.y = y;
             p.z = z;
-            p.label = 0;
+            p.label = -1;
 
             points.push_back(p);
         }
-
         totalRead += batchSize;
     }
-
     return true;
 }
 
@@ -358,7 +359,7 @@ void segmentPoints(std::vector<Point>& pts)
     // For demo, assign random classes
     for (auto& p : pts)
     {
-        p.label = 0;
+        p.label = -1;
     }
 }
 
@@ -447,7 +448,8 @@ void setupCamera(int windowWidth, int windowHeight)
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    // Example camera transform (move back 50 units)
+
+    // Apply camera transform
     glTranslatef(0.f, 0.f, -50.f);
     glRotatef(20.f, 1.f, 0.f, 0.f);
     glRotatef((float)glfwGetTime() * 10.f, 0.f, 1.f, 0.f);
@@ -461,19 +463,19 @@ void renderPointCloud()
     for (const auto& p : pointsc)
     {
         // Optional: Color by label/class
-        if (p.label == 0)
+        if (p.label == 1)
             glColor3f(1.0f, 0.0f, 0.0f);  // Red
-        else if (p.label == 1)
-            glColor3f(0.0f, 1.0f, 0.0f);  // Green
         else if (p.label == 2)
-            glColor3f(0.0f, 0.0f, 1.0f);  // Blue
+            glColor3f(0.0f, 1.0f, 0.0f);  // Green
         else if (p.label == 3)
-            glColor3f(0.0f, 0.5f, 0.5f);  // Blue
+            glColor3f(0.0f, 0.0f, 1.0f);  // Blue
         else if (p.label == 4)
-            glColor3f(0.0f, 0.5f, 1.0f);  // Blue
+            glColor3f(0.0f, 0.5f, 0.5f);  // Blue
         else if (p.label == 5)
-            glColor3f(0.0f, 1.0f, 0.5f);  // Blue
+            glColor3f(0.0f, 0.5f, 1.0f);  // Blue
         else if (p.label == 6)
+            glColor3f(0.0f, 1.0f, 0.5f);  // Blue
+        else if (p.label == 7)
             glColor3f(0.0f, 1.0f, 1.0f);  // Blue
 
         glVertex3f((float)p.x, (float)p.y, (float)p.z);
@@ -545,15 +547,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     std::cout << "Loaded " << points.size() << " points.\n";
 
-    // Perform segmentation (here, dummy)
-    std::cout << "Segmenting points...\n";
-    segmentPoints(points);
-    std::cout << "Segmentation complete.\n";
-
     //ProcPoints
-    procPoint.convertPoints();
+    CSortPointCloud sortManager;
+    sortManager.m_src_points = points;
+    sortManager.sortPoints(0.01, 0.01, 0.01);
+    sortManager.removeSmallFragment(3, 0.04);
+    points = std::move(sortManager.m_dst_points);
+    
+    int counter = 0;
+    CDetector detector;
+    auto floors = detector.detectFloorAll(points,0.1,80000);
+    auto wallsx = detector.detectWallX(points, 0.1, 10000);
+    auto wallsy = detector.detectWallY(points, 0.1, 7000);
+
+    if (!pointsc.empty())
+        pointsc.clear();
+    //for (const auto& wall : wallsx) {
+    //    pointsc.insert(pointsc.end(), wall.begin(), wall.end());
+    //    //counter++;
+    //}
+    /*for (const auto& wall : wallsy) {
+        pointsc.insert(pointsc.end(), wall.begin(), wall.end());
+        counter++;
+    }*/
+    for (const auto& floor : floors) {
+        pointsc.insert(pointsc.end(), floor.begin(), floor.end());
+        counter++;
+    }
+    
+    counter = 0;
+    /*procPoint.convertPoints();
     procPoint.convertPointCloud();
-    procPoint.segmentPlanes();
+    procPoint.segmentPlanes();*/
 
     // Initialize GLFW (required for window creation)
     if (!glfwInit())
@@ -602,20 +627,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Setup camera/view
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-        glTranslatef(0.f, 0.f, -50.f);
-        glRotatef(20.f, 1.f, 0.f, 0.f);
-        glRotatef((float)glfwGetTime() * 10.f, 0.f, 1.f, 0.f);
-
+        // Get window size
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
 
+        // Setup camera/view
         setupCamera(width, height);
+
         // Render point cloud
         renderPointCloud();
-        //drawLine(0.0f, 0.0f, 0.0f, 10.0f, 10.0f, 10.0f);
+        drawLine(0.0f, 0.0f, 0.0f, 100.0f, 0.0f, 0.0f);
+        //drawLine(0.0f, 0.0f, 0.0f, 0.0f, 100.0f, 0.0f);
+        //drawLine(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 100.0f);
 
         // Render UI
         ImGui::Render();

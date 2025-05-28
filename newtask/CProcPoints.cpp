@@ -85,6 +85,7 @@ void CProcPoints::segmentPlanes()
 
             m_colored_cloud->points.push_back(cpt);
             pointsc.push_back(cp);
+            cnt[plane_id]++;
         }
 
         // Remove plane points from remaining cloud
@@ -94,7 +95,7 @@ void CProcPoints::segmentPlanes()
         m_cloud_remaining = cloud_filtered;
 
         plane_id++;
-        if (plane_id == 6)
+        if (plane_id == 10)
             break;
     }
 
@@ -111,7 +112,7 @@ void CProcPoints::segmentPlanes()
         cp.x = pt.x;
         cp.y = pt.y;
         cp.z = pt.z;
-        cp.label =  0;
+        cp.label = 0;
         m_colored_cloud->points.push_back(cpt);
         pointsc.push_back(cp);
     }

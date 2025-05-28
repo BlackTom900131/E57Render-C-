@@ -107,6 +107,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>F:\pth\newtask\libs\imgui;D:\libs\include;F:\pth\newtask\libs\glfw</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -123,6 +124,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <OpenMPSupport>true</OpenMPSupport>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,7 +132,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CDetector.h" />
+    <ClInclude Include="CGlobal.h" />
     <ClInclude Include="CProcPoints.h" />
+    <ClInclude Include="CSortPointCloud.h" />
     <ClInclude Include="F:\pth\newtask\external\imgui\backends\imgui_impl_glfw.h" />
     <ClInclude Include="F:\pth\newtask\external\imgui\backends\imgui_impl_opengl3.h" />
     <ClInclude Include="F:\pth\newtask\external\imgui\backends\imgui_impl_opengl3_loader.h" />
@@ -141,7 +146,9 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CDetector.cpp" />
     <ClCompile Include="CProcPoints.cpp" />
+    <ClCompile Include="CSortPointCloud.cpp" />
     <ClCompile Include="F:\pth\newtask\external\imgui\backends\imgui_impl_glfw.cpp" />
     <ClCompile Include="F:\pth\newtask\external\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="F:\pth\newtask\external\imgui\imgui.cpp" />
